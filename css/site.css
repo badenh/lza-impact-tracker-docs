@@ -91,6 +91,32 @@ section > h2 {
   border-bottom: 1px solid var(--border);
   padding-bottom: 10px;
 }
+section > h2.h2-with-nav {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+}
+.back-to-top {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--fg-muted);
+  text-decoration: none;
+  padding: 3px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  white-space: nowrap;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.back-to-top:hover {
+  color: var(--fg);
+  border-color: var(--fg-muted);
+  background: #f2f5fa;
+  text-decoration: none;
+}
 section > h3 {
   font-size: 15px;
   color: var(--fg-muted);

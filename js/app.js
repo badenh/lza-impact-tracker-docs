@@ -145,9 +145,22 @@ function buildToc() {
     const li = document.createElement("li");
     const a = document.createElement("a");
     a.href = "#" + section.id;
-    a.textContent = h2.textContent;
+    // Use the raw h2 text via cloneNode + firstChild content, without the
+    // back-to-top anchor we're about to inject below.
+    a.textContent = h2.firstChild ? h2.firstChild.textContent.trim() : h2.textContent;
     li.appendChild(a);
     ol.appendChild(li);
+
+    // Inject a "Back to Contents" nav anchor into the h2, aligned right.
+    if (!h2.querySelector(".back-to-top")) {
+      h2.classList.add("h2-with-nav");
+      const back = document.createElement("a");
+      back.href = "#toc";
+      back.className = "back-to-top";
+      back.textContent = "↑ Contents";
+      back.setAttribute("aria-label", "Back to Contents");
+      h2.appendChild(back);
+    }
   });
   nav.innerHTML = "";
   nav.appendChild(ol);
