@@ -3,7 +3,7 @@
 // and drives all interactive views. No build step; runs directly in the browser.
 
 const DATA_BASE = "data/";
-const DATA_VERSION = "4";  // bump when regenerating out/ to defeat caches
+const DATA_VERSION = "6";  // bump when regenerating out/ to defeat caches
 
 const state = {
   index: null,
@@ -74,6 +74,19 @@ function rcLink(framework, related) {
   return el("a",
     { href: "#related-view", "data-fw": framework, "data-rc": related, class: "rc-link" },
     related);
+}
+
+// Description tooltip lookup — returns the aggregate description if loaded,
+// else empty string. Called by link helpers that want a `title` attribute.
+function descOf(lza) {
+  return (state.cross && state.cross.descriptions && state.cross.descriptions[lza]) || "";
+}
+
+function lzaLink(lza) {
+  const attrs = { href: "#lza-view", "data-lza": lza, class: "lza-id-link" };
+  const desc = descOf(lza);
+  if (desc) attrs.title = desc;
+  return el("a", attrs, lza);
 }
 
 function destroyChart(key) {
@@ -150,6 +163,8 @@ async function boot() {
   document.querySelectorAll(".build-time").forEach(el => {
     el.textContent = state.index.generated_at;
   });
+  const tvEl = document.getElementById("tool-version");
+  if (tvEl && state.index.tool_version) tvEl.textContent = state.index.tool_version;
 
   const versions = state.index.versions.map(v => v.version);
   await Promise.all([
@@ -547,6 +562,19 @@ function renderLzaView(lza, versionFilter) {
   const versions = state.cross.versions;
   versionFilter = versionFilter || "all";
 
+  const descHost = document.getElementById("l-description");
+  if (descHost) {
+    const desc = (state.cross.descriptions || {})[lza];
+    descHost.innerHTML = "";
+    if (desc) {
+      descHost.appendChild(el("span", { class: "lza-desc-id" }, lza));
+      descHost.appendChild(el("span", { class: "lza-desc-text" }, desc));
+    } else {
+      descHost.appendChild(el("span", { class: "lza-desc-text muted" },
+        "No description available for " + lza));
+    }
+  }
+
   // Presence per version: single-row table, LZA ID | one column per version.
   const presenceHost = document.getElementById("l-presence");
   presenceHost.innerHTML = "";
@@ -560,7 +588,7 @@ function renderLzaView(lza, versionFilter) {
   const tbody = el("tbody");
   const tr = el("tr");
   tr.appendChild(el("td", {},
-    el("span", { class: "lza-id-mono" }, lza)));
+    el("span", { class: "lza-id-mono", title: descOf(lza) || "" }, lza)));
   versions.forEach(v => {
     const present = (state.cross.lza_ids_by_version[v] || []).includes(lza);
     const td = el("td", { class: "presence-td" });
@@ -609,6 +637,19 @@ function renderLzaHeatmap(lza) {
   const versions = state.cross.versions;
   const allFw = state.cross.all_frameworks;
   const fwByVersion = state.cross.frameworks_by_version;
+
+  const descHost = document.getElementById("lh-description");
+  if (descHost) {
+    const desc = descOf(lza);
+    descHost.innerHTML = "";
+    if (desc) {
+      descHost.appendChild(el("span", { class: "lza-desc-id" }, lza));
+      descHost.appendChild(el("span", { class: "lza-desc-text" }, desc));
+    } else {
+      descHost.appendChild(el("span", { class: "lza-desc-text muted" },
+        "No description available for " + lza));
+    }
+  }
 
   // Rows ordered by the workbook version each framework first appeared in,
   // so growth reads top-down like the framework-lifecycle table.
@@ -711,9 +752,7 @@ function renderRelatedView(framework, related) {
         cell.appendChild(el("span", { class: "pill" }, "v" + v));
     });
     if (!cell.childNodes.length) cell.textContent = "—";
-    const idLink = el("a",
-      { href: "#lza-view", "data-lza": id, class: "lza-id-link" }, id);
-    return { id: idLink, cell };
+    return { id: lzaLink(id), desc: descOf(id) || "—", cell };
   });
 
   const head = el("div");
@@ -721,6 +760,7 @@ function renderRelatedView(framework, related) {
     `${allLza.size} distinct LZA Common Control IDs are mapped to ${framework} - ${related} across all LZA Compliance Workbook versions.`));
   head.appendChild(buildTable([
     { key: "id",   label: "LZA Common Control ID" },
+    { key: "desc", label: "Description" },
     { key: "cell", label: "Mapped In LZA Compliance Workbook Version" },
   ], rows));
   replace("r-detail", head);
@@ -774,6 +814,7 @@ function renderLifecycleView(filterText) {
   const thead = el("thead");
   const trh = el("tr");
   trh.appendChild(el("th", {}, "LZA Common Control ID"));
+  trh.appendChild(el("th", {}, "Description"));
   versions.forEach(v => trh.appendChild(el("th", { class: "num" }, "v" + v)));
   thead.appendChild(trh);
   table.appendChild(thead);
@@ -781,8 +822,9 @@ function renderLifecycleView(filterText) {
   ids.forEach(id => {
     const tr = el("tr");
     const tdId = el("td");
-    tdId.appendChild(el("a", { href: "#lza-view", "data-lza": id }, id));
+    tdId.appendChild(lzaLink(id));
     tr.appendChild(tdId);
+    tr.appendChild(el("td", { class: "desc-cell" }, descOf(id) || "—"));
     versions.forEach(v => {
       const td = el("td", { class: "num" });
       if (setByVersion[v].has(id))
@@ -942,7 +984,7 @@ function renderCoverageView(version, framework) {
     statsHost.appendChild(div);
   });
 
-  // Unmapped LZA list for the selected framework
+  // Unmapped LZA table for the selected framework
   const listHost = document.getElementById("c-unmapped-list");
   listHost.innerHTML = "";
   const unmappedIds = payload.lza_ids.filter(id => !s.mapped_ids.has(id));
@@ -951,10 +993,11 @@ function renderCoverageView(version, framework) {
       `Every LZA Common Control ID in v${version} maps to at least one ${framework} Related Control.`));
   } else {
     listHost.appendChild(el("p", { class: "hint" },
-      `${unmappedIds.length} LZA control${unmappedIds.length === 1 ? "" : "s"} unmapped to ${framework} in v${version}.`));
-    const list = el("div", { class: "unmapped-list" });
-    unmappedIds.forEach(id => list.appendChild(el("code", {}, id)));
-    listHost.appendChild(list);
+      `${unmappedIds.length} LZA Common Control ID${unmappedIds.length === 1 ? "" : "s"} unmapped to ${framework} in v${version}.`));
+    listHost.appendChild(buildTable([
+      { key: "id",   label: "LZA Common Control ID" },
+      { key: "desc", label: "Description" },
+    ], unmappedIds.map(id => ({ id: lzaLink(id), desc: descOf(id) || "—" }))));
   }
 }
 
@@ -1154,9 +1197,11 @@ function renderHotLza(scopeValue, topN) {
   });
   replace("hL-table", buildTable([
     { key: "id",    label: "LZA Common Control ID" },
+    { key: "desc",  label: "Description" },
     { key: "count", label: "Mappings", num: true },
   ], slice.map(r => ({
-    id: el("a", { href: "#lza-view", "data-lza": r.lza_id, class: "lza-id-link" }, r.lza_id),
+    id: lzaLink(r.lza_id),
+    desc: descOf(r.lza_id) || "—",
     count: r.count.toLocaleString()
   }))));
 }

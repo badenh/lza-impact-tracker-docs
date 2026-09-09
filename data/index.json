@@ -1,5 +1,6 @@
 {
-  "generated_at": "2026-09-08T06:38:40Z",
+  "generated_at": "2026-09-09T02:12:15Z",
+  "tool_version": "1.1.0",
   "versions": [
     {
       "version": "1.1.0",
@@ -8,7 +9,8 @@
       "artifact": "lza-cw-v1.1.0.json",
       "frameworks": 8,
       "lza_ids": 182,
-      "mapping_tuples": 5511
+      "mapping_tuples": 5511,
+      "descriptions": 182
     },
     {
       "version": "1.2.0",
@@ -17,7 +19,8 @@
       "artifact": "lza-cw-v1.2.0.json",
       "frameworks": 12,
       "lza_ids": 182,
-      "mapping_tuples": 7332
+      "mapping_tuples": 7332,
+      "descriptions": 182
     },
     {
       "version": "1.3.0",
@@ -26,7 +29,8 @@
       "artifact": "lza-cw-v1.3.0.json",
       "frameworks": 17,
       "lza_ids": 192,
-      "mapping_tuples": 12036
+      "mapping_tuples": 12036,
+      "descriptions": 191
     }
   ],
   "artifacts": {

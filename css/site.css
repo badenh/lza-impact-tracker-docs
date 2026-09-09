@@ -218,6 +218,41 @@ td.num, th.num { text-align: left; font-variant-numeric: tabular-nums; }
 .presence-cell.on  { background: var(--accent); }
 .presence-cell.off { background: #eef1f6; color: #a8b0bd; }
 
+.lza-desc {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  background: #f4f5f7;
+  border: 1px solid var(--border);
+  border-left: 3px solid #3a3f47;
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin: 10px 0 16px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.lza-desc-id {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: #3a3f47;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.lza-desc-text { color: var(--fg); }
+.lza-desc-text.muted { color: var(--fg-muted); font-style: italic; }
+
+td.desc-cell,
+table td:nth-child(2).desc-cell { max-width: 460px; }
+.lifecycle-table td.desc-cell { max-width: 500px; }
+
+/* Do not wrap the LZA Common Control ID column in tables that show it
+   next to a description. */
+#r-detail table td:first-child,
+#r-detail table th:first-child,
+#hL-table table td:first-child,
+#hL-table table th:first-child,
+#c-unmapped-list table td:first-child,
+#c-unmapped-list table th:first-child { white-space: nowrap; }
+
 .hot-grid {
   display: grid;
   grid-template-columns: 1fr;
