@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>LZA Compliance Framework Impact Tracker (LZA CFIT)</title>
+<link rel="stylesheet" href="css/site.css?v=39" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-chart-matrix@2.0.1/dist/chartjs-chart-matrix.min.js"></script>
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap header-flex">
+    <div class="header-text">
+      <h1>LZA Compliance Framework Impact Tracker (LZA CFIT)</h1>
+      <p class="tagline">Quantifying how the AWS Landing Zone Accelerator Universal Configuration
+        enables customers achieve compliance against a range of international frameworks through the
+        lens of the evolving LZA Compliance Workbook.</p>
+      <p class="header-build">Data build: <span class="build-time">—</span></p>
+    </div>
+    <img class="site-logo" src="assets/lzacfit-logo.png" alt="LZA CFIT logo" />
+  </div>
+</header>
+
+<main class="wrap">
+
+<section id="toc">
+  <h2>Contents</h2>
+  <nav id="toc-nav"></nav>
+</section>
+
+<section id="intro">
+  <h2>About (LZA, LZA UC and LZA CW)</h2>
+  <p>The <a href="https://github.com/aws/lza-universal-configuration/blob/main/docs/01-Overview/index.adoc"
+       target="_blank" rel="noopener">AWS Landing Zone Accelerator (LZA) Universal Configuration (UC)</a> is an Infrastructure-as-Code package
+    developed from years of field experience with highly regulated customers including governments across
+    the world, and in consultation with AWS Partners and industry experts. The Universal Configuration was
+    built to help AWS customers (and the partners who assist them) to implement security and compliance
+    at scale on regulated workloads. By
+    setting a high bar with the latest AWS security best practices, the Universal Configuration can help
+    address technical control requirements from compliance frameworks across different geographic regions
+    and industry verticals.</p>
+  <p>The <a href="https://aws.amazon.com/blogs/security/introducing-the-landing-zone-accelerator-on-aws-universal-configuration-and-lza-compliance-workbook/">
+    AWS LZA Compliance Workbook</a> maps every LZA Common Control ID to one or more controls
+    in a growing set of industry-recognized Compliance Frameworks.</p>
+  <p>The LZA Compliance Workbook is organized LZA-first — each row has an LZA Common Control ID
+    and then a Compliance Framework column with packed identifiers; this presentation makes
+    framework-side questions ("how many LZA controls cover ISO&nbsp;27001 A.8.16?") awkward to
+    answer at a glance. Equally the Compliance Workbook is fundamentally oriented toward
+    selecting and working with a single framework; this presentation makes a comparison of the
+    coverage and impact of LZA against a set of frameworks — even those that have well understood
+    relationships to each other — less straightforward.</p>
+  <p>This tool (LZA CFIT) inverts and normalizes the mapping across every published workbook version, then lets
+    you slice it interactively: by version, framework, LZA control, or a specific framework control.
+    All counts are <strong>raw mapping counts</strong>, not implementation-depth or compliance
+    assurance metrics — see caveats at the bottom.</p>
+</section>
+
+<section id="totals">
+  <h2>LZA Compliance Workbook Development</h2>
+  <p class="hint tbc">View the progressive development of the LZA Compliance Workbook by
+    Compliance Framework count, LZA Common Control IDs count, and Mapping Tuples.</p>
+  <div class="mini-chart-row">
+    <div><h4>Compliance Frameworks</h4><div class="chart-wrap small"><canvas id="t-frameworks"></canvas></div></div>
+    <div><h4>LZA Common Control IDs</h4><div class="chart-wrap small"><canvas id="t-lza"></canvas></div></div>
+    <div><h4>Mapping tuples</h4><div class="chart-wrap small"><canvas id="t-tuples"></canvas></div></div>
+  </div>
+  <div id="totals-table"></div>
+  <details class="explain">
+    <summary>How is a mapping tuple counted?</summary>
+    <p>A <strong>mapping tuple</strong> is a single
+      <code>(LZA Common Control ID, framework, related control)</code> triple
+      emitted from the workbook.</p>
+    <p>For each row of the <code>Mapping Rows Merged</code> sheet (one LZA
+      Common Control ID) and each framework column, the cell contents are split
+      into individual related-control identifiers — newline, comma, or space
+      delimited depending on the framework, with parenthetical
+      control-enhancement fragments like <code>AC-2 (1)</code> preserved.
+      Sentinel values (<code>NA</code>, <code>N/A</code>, <code>None</code>,
+      <code>Nil</code>, <code>-</code>, <code>No Control Mapping</code>) yield
+      zero tuples. One tuple is emitted per resulting identifier.</p>
+    <p>Example: an LZA row with the ISO&nbsp;27001 column containing
+      <code>A.5.3\nA.5.9\nA.5.10</code> produces three tuples. Duplicate
+      identifiers within a single cell (a workbook defect) are not deduplicated
+      and count once per occurrence. The count reflects the shape of AWS's
+      mapping, not implementation depth.</p>
+  </details>
+</section>
+
+<section id="version-view">
+  <h2>Comparative Framework Coverage in a Single LZA Compliance Workbook Version</h2>
+  <p class="hint tbc">Pick a single LZA Compliance Workbook version, and see which Compliance
+    Frameworks were included, with the option to view by different metrics.</p>
+  <div class="controls">
+    <label>Select Version
+      <select id="v-select"></select>
+    </label>
+    <label>Show By Metric
+      <select id="v-metric">
+        <option value="related_control_count" selected>Related Controls</option>
+        <option value="mapping_tuples">Mapping tuples</option>
+        <option value="lza_id_count">Distinct LZA Common Control IDs</option>
+      </select>
+    </label>
+  </div>
+  <div class="chart-wrap tall"><canvas id="v-chart"></canvas></div>
+  <div id="v-table"></div>
+</section>
+
+<section id="framework-longitudinal-view">
+  <h2>Single Framework Coverage Across All LZA Compliance Workbook Versions</h2>
+  <p class="hint tbc">See how Compliance Framework support has developed across versions of the
+    LZA Compliance Workbook, with the option to view by different metrics.</p>
+  <div class="controls">
+    <label>Select Framework
+      <select id="fl2-framework"></select>
+    </label>
+    <label>Show By Metric
+      <select id="fl2-metric">
+        <option value="lza_id_count" selected>LZA Common Control IDs Mapped</option>
+        <option value="related_control_count">Distinct Related Controls</option>
+        <option value="mapping_tuples">Mapping tuples</option>
+      </select>
+    </label>
+  </div>
+  <div class="chart-wrap"><canvas id="fl2-chart"></canvas></div>
+  <div id="fl2-table"></div>
+</section>
+
+<section id="framework-view">
+  <h2>Single Framework Coverage in a Single LZA Compliance Workbook Version</h2>
+  <p class="hint tbc">Pick a single Compliance Framework, a single LZA Compliance Workbook
+    version, and the number of results you wish to see, to understand which Related Controls
+    are most frequently mapped against LZA Common Control IDs.</p>
+  <div class="controls">
+    <label>Select Framework
+      <select id="f-select"></select>
+    </label>
+    <label>Select Version
+      <select id="f-version"></select>
+    </label>
+    <label>Show Top N
+      <select id="f-topn">
+        <option selected>10</option><option>25</option><option>50</option><option>100</option><option value="0">All</option>
+      </select>
+    </label>
+  </div>
+  <div class="chart-wrap"><canvas id="f-chart"></canvas></div>
+  <div id="f-table"></div>
+</section>
+
+<section id="lza-view">
+  <h2>Single LZA Common Control ID Presence and Mappings</h2>
+  <p class="hint tbc">Pick a single LZA Common Control ID, and see which LZA Compliance Workbook versions
+    it appears in, and which Compliance Framework Related Controls it is mapped to.</p>
+  <div class="controls">
+    <label>Search/Filter
+      <input id="l-filter" type="search" placeholder="e.g. SCP, IAM, LZA-G-CT-" />
+    </label>
+    <label>Show by LZA Common Control ID
+      <select id="l-select"></select>
+    </label>
+  </div>
+  <h3>Presence by LZA Compliance Workbook Version</h3>
+  <div id="l-presence"></div>
+  <h3>Mappings to Compliance Framework and Related Controls</h3>
+  <div class="controls">
+    <label>Filter mappings by workbook version
+      <select id="l-version">
+        <option value="all" selected>Aggregate (all versions)</option>
+      </select>
+    </label>
+  </div>
+  <div id="l-mappings"></div>
+</section>
+
+<section id="lza-heatmap-view">
+  <h2>Framework Coverage and Related Control Mapping for a Single LZA Common Control ID</h2>
+  <p class="hint tbc">Pick a LZA Common Control ID and view both whether it was mapped to a
+    Compliance Framework in each LZA Compliance Workbook version, and the count of Related
+    Controls in that instance.</p>
+  <div class="controls">
+    <label>Show by LZA Common Control ID
+      <select id="lh-select"></select>
+    </label>
+  </div>
+  <div id="lh-scroll" class="lc-scroll">
+    <div id="lh-table-wrap"></div>
+  </div>
+</section>
+
+<section id="lifecycle-view">
+  <h2>LZA Common Control ID Lifecycle Across Workbook Versions</h2>
+  <p class="hint tbc">View all LZA Common Control IDs across LZA Compliance Workbook versions
+    to understand when they were introduced or removed. Search/filter to narrow the scope to a
+    subset of LZA Common Controls. Click any row's LZA Common Control label to see its single
+    ID details.</p>
+  <div class="controls">
+    <label>Search/Filter
+      <input id="lc-filter" type="search" placeholder="e.g. SCP, IAM, LZA-G-CT-" />
+    </label>
+  </div>
+  <div id="lc-scroll" class="lc-scroll">
+    <div id="lc-table-wrap"></div>
+  </div>
+</section>
+
+<section id="framework-lifecycle-view">
+  <h2>Compliance Framework Lifecycle Across Workbook Versions</h2>
+  <p class="hint tbc">View all Compliance Frameworks across LZA Compliance Workbook versions to
+    understand when they were introduced or removed. Search/filter to narrow the scope to a
+    subset of Compliance Frameworks. Click any row's Framework label to see its single Framework
+    details.</p>
+  <div class="controls">
+    <label>Search/Filter
+      <input id="fl-filter" type="search" placeholder="e.g. NIST, ISO, CCCS" />
+    </label>
+  </div>
+  <div id="fl-scroll" class="lc-scroll">
+    <div id="fl-table-wrap"></div>
+  </div>
+</section>
+
+<section id="related-view">
+  <h2>Inspect Presence and Mapping of Single Control in a Nominated Framework</h2>
+  <p class="hint tbc">Pick a Compliance Framework and a Related Control to view the list of LZA
+    Common Control IDs which are mapped to it. Click any row's LZA Common Control label to see
+    its single ID details.</p>
+  <div class="controls">
+    <label>Select Framework
+      <select id="r-framework"></select>
+    </label>
+    <label>Show By Related Control
+      <select id="r-select"></select>
+    </label>
+  </div>
+  <div id="r-detail"></div>
+</section>
+
+<section id="coverage-view">
+  <h2>Mapped vs Unmapped LZA Common Control IDs per Framework</h2>
+  <p class="hint tbc">Pick an LZA Compliance Workbook version and a Compliance Framework to view
+    the counts and proportions of mapped vs unmapped LZA Common Control IDs for that Compliance
+    Framework.</p>
+  <div class="controls">
+    <label>Select Version
+      <select id="c-version"></select>
+    </label>
+    <label>Select Framework
+      <select id="c-framework"></select>
+    </label>
+  </div>
+  <div id="c-stats" class="stats-row"></div>
+  <h3>Unmapped LZA controls (selected framework)</h3>
+  <div id="c-unmapped-list"></div>
+</section>
+
+<section id="ratios-view">
+  <h2>Mapped vs Unmapped Ratios for All Frameworks</h2>
+  <p class="hint tbc">Pick an LZA Compliance Workbook version to view proportion and counts of
+    mapped vs unmapped LZA Common Control IDs by Compliance Framework.</p>
+  <div class="controls">
+    <label>Select Version
+      <select id="c2-version"></select>
+    </label>
+  </div>
+  <div class="ratios-pair">
+    <div>
+      <h3>Proportional coverage</h3>
+      <div class="chart-wrap tall"><canvas id="c3-chart"></canvas></div>
+    </div>
+    <div>
+      <h3>Absolute counts</h3>
+      <div class="chart-wrap tall"><canvas id="c2-chart"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<section id="hot-lza-view">
+  <h2>Most Frequently Mapped LZA Common Control IDs</h2>
+  <p class="hint tbc">Pick an LZA Compliance Workbook version to see the list of LZA Common
+    Control IDs which are most frequently mapped to Compliance Framework Related Controls, and
+    the number of results you wish to see. Click any row's LZA Common Control label to see its
+    single ID details.</p>
+  <div class="controls">
+    <label>Select Version
+      <select id="hL-scope">
+        <option value="aggregate">Aggregate (all versions)</option>
+      </select>
+    </label>
+    <label>Show Top N
+      <select id="hL-topn">
+        <option selected>10</option><option>25</option><option>50</option>
+      </select>
+    </label>
+  </div>
+  <div class="chart-wrap"><canvas id="hL-chart"></canvas></div>
+  <div id="hL-table"></div>
+</section>
+
+<section id="hot-rc-view">
+  <h2>Most Frequently Mapped Related Controls</h2>
+  <p class="hint tbc">Pick an LZA Compliance Workbook version to see the list of Compliance
+    Framework Related Controls which are most frequently mapped, and the number of results you
+    wish to see.</p>
+  <div class="controls">
+    <label>Select Version
+      <select id="hR-scope">
+        <option value="aggregate">Aggregate (all versions)</option>
+      </select>
+    </label>
+    <label>Show Top N
+      <select id="hR-topn">
+        <option selected>10</option><option>25</option><option>50</option>
+      </select>
+    </label>
+  </div>
+  <div class="chart-wrap"><canvas id="hR-chart"></canvas></div>
+  <div id="hR-table"></div>
+</section>
+
+<section id="data">
+  <h2>Data Sources</h2>
+  <p class="build">Data build: <span class="build-time">—</span></p>
+  <p>Built from these AWS-published workbooks:</p>
+  <ul id="sources-list"></ul>
+  <p>The workbooks are distributed via
+    <a href="https://us-east-1.console.aws.amazon.com/artifact/">AWS Artifact</a>.</p>
+  <p>Extraction reads the <code>Mapping Rows Merged</code> sheet (authoritative lookup table).
+    Framework column headings are normalized across versions — notably <code>DoD CCI</code> /
+    <code>DoW Control Correlation Identifier (CCI)</code> /
+    <code>DoD Control Correlation Identifier (CCI)</code> collapse to <code>DoD/DoW CCI</code>.</p>
+</section>
+
+<section id="caveats">
+  <h2>Caveats</h2>
+  <ul>
+    <li>Names of Compliance Frameworks are displayed in the form they appear in the LZA Compliance
+      Workbook — typically a commonly recognized acronym or abbreviation.</li>
+    <li>The workbook does <strong>not</strong> enumerate every control in each framework — only those for
+      which a mapping has been created between a LZA Common Control ID and a compliance framework specific ID.
+      Framework-side denominators for a coverage percentage are not derivable from this data alone.</li>
+    <li>The workbook does <strong>not</strong> contain the narrative of each framework control.</li>
+    <li>Counts reflect the <em>breadth</em> of the mappings in the LZA Compliance Workbook — not
+      implementation depth or quality of security outcome. A high count is not evidence of thoroughness
+      and this tool is not a compliance assertion.</li>
+    <li>For a detailed analysis of coverage and rating, see separate AWS Security Blog posts and
+      Artifact reports by Compliance Framework, e.g.
+      <a href="https://aws.amazon.com/blogs/security/fast-track-ism-ready-cloud-environments-and-irap-assessments-with-landing-zone-accelerator-on-aws/"
+         target="_blank" rel="noopener">ISM Australia</a>,
+      <a href="https://aws.amazon.com/blogs/security/landing-zone-accelerator-independent-assessment-report-for-c52020-now-available-on-aws-artifact/"
+         target="_blank" rel="noopener">C5 Germany</a>,
+      <a href="https://aws.amazon.com/blogs/security/support-canadas-cccs-pbhva-overlay-compliance-with-the-landing-zone-accelerator-on-aws/"
+         target="_blank" rel="noopener">CCCS Canada</a>.</li>
+    <li>To download the LZA Universal Configuration, please access it via
+      <a href="https://github.com/aws/lza-universal-configuration" target="_blank"
+         rel="noopener">GitHub</a>.</li>
+    <li>For official AWS support re LZA, please contact the LZA team directly using
+      <a href="https://pulse.amazon/survey/U8ONBU8F?p=0" target="_blank" rel="noopener">this form</a>.</li>
+  </ul>
+</section>
+
+<section id="credits">
+  <h2>Credits</h2>
+  <p class="about">LZA CFIT is an analytical tool and publication by
+    <strong>Baden Hughes</strong>, an independent security and compliance
+    engineer. You can contact him via:
+    <a href="mailto:hello@lzacfit.org">hello@lzacfit.org</a>
+    or <a href="#" id="signup-link">sign up to our low-volume announcements list</a>.</p>
+  <div class="genby">Generated by <b>LZA CFIT</b> v1.0.0 — comparative analysis
+    of AWS Landing Zone Accelerator Universal Configuration coverage across
+    published LZA Compliance Workbook versions and its included Compliance
+    Frameworks.</div>
+  <hr>
+  <div class="copyright">
+    LZA Universal Configuration and LZA Compliance Workbook and base LZA logo with rocket device &copy; Amazon Web Services 2025-<span class="year"></span>;<br>
+    LZA CFIT analysis tool and publication &copy; Baden Hughes, 2026.
+  </div>
+</section>
+
+</main>
+
+<script src="js/app.js?v=39"></script>
+</body>
+</html>
